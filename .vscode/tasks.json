@@ -6,7 +6,10 @@
             "type": "process",
             "isBuildCommand": true,
             "command": "${userHome}/.pico-sdk/ninja/v1.12.1/ninja",
-            "args": ["-C", "${workspaceFolder}/build"],
+            "args": [
+                "-C",
+                "${workspaceFolder}/build"
+            ],
             "group": "build",
             "presentation": {
                 "reveal": "always",
@@ -18,7 +21,7 @@
             }
         },
         {
-            "label": "Run Project",
+            "label": "Run (PicoTool)",
             "type": "process",
             "command": "${env:HOME}/.pico-sdk/picotool/2.0.0/picotool/picotool",
             "args": [
@@ -36,7 +39,7 @@
             }
         },
         {
-            "label": "Flash",
+            "label": "Flash (OpenOCD)",
             "type": "process",
             "command": "${userHome}/.pico-sdk/openocd/0.12.0+dev/openocd.exe",
             "args": [
@@ -53,6 +56,33 @@
             "windows": {
                 "command": "${env:USERPROFILE}/.pico-sdk/openocd/0.12.0+dev/openocd.exe",
             }
-        }
+        },
+        {
+            "label": "Flash (Blackmagic Probe)",
+            "type": "process",
+            "command": "${command:raspberry-pi-pico.getGDBPath}",
+            "args": [
+                "-q",
+                "-nx",
+                "--batch",
+                "-ex",
+                "target extended-remote ${input:BMP_Port}",
+                "-x",
+                ".vscode/bmp_flash.scr",
+                "${command:raspberry-pi-pico.launchTargetPath}",
+            ],
+            "problemMatcher": [],
+            "windows": {
+                "command": "${env:USERPROFILE}/.pico-sdk/toolchain/13_2_Rel1/bin/arm-none-eabi-gdb.exe",
+            },
+        },
+    ],
+    "inputs": [
+        {
+            "id": "BMP_Port",
+            "description": "BMP Serial Port:",
+            "default": "\\\\.\\COM10",
+            "type": "promptString"
+        },
     ]
 }

@@ -65,5 +65,43 @@
             "preLaunchTask": "Flash",
             "svdPath": "${userHome}/.pico-sdk/sdk/2.0.0/src/${command:raspberry-pi-pico.getChip}/hardware_regs/${command:raspberry-pi-pico.getChipUppercase}.svd"
         },
+        {
+            "name": "Debug (Blackmagic Probe) (CortexDBG)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "executable": "${command:raspberry-pi-pico.launchTargetPath}",
+            "armToolchainPath": "${env:USERPROFILE}/.pico-sdk/toolchain/13_2_Rel1/bin",
+            "gdbPath": "${command:raspberry-pi-pico.getGDBPath}",
+            "servertype": "bmp",
+            "interface": "swd",
+            "device": "1",
+            "BMPGDBSerialPort": "${input:BMP_Port}",
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "parsed",
+        },
+        {
+            "name": "Attach (Blackmagic Probe) (CortexDBG)",
+            "type": "cortex-debug",
+            "request": "attach",
+            "cwd": "${workspaceRoot}",
+            "executable": "${command:raspberry-pi-pico.launchTargetPath}",
+            "armToolchainPath": "${env:USERPROFILE}/.pico-sdk/toolchain/13_2_Rel1/bin",
+            "gdbPath": "${command:raspberry-pi-pico.getGDBPath}",
+            "servertype": "bmp",
+            "interface": "swd",
+            "device": "1",
+            "BMPGDBSerialPort": "${input:BMP_Port}",
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "raw"
+        },
+    ],
+    "inputs": [
+        {
+            "id": "BMP_Port",
+            "description": "BMP Serial Port:",
+            "default": "\\\\.\\COM10",
+            "type": "promptString"
+        },
     ]
 }
