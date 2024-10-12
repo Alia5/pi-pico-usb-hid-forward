@@ -1,3 +1,6 @@
+[submodule "ext/Pico-PIO-USB"]
+	path = ext/Pico-PIO-USB
+	url = git@github.com:sekigon-gonnoc/Pico-PIO-USB.git
 [submodule "ext/FreeRTOS-Kernel"]
 	path = ext/FreeRTOS-Kernel
 	url = https://github.com/raspberrypi/FreeRTOS-Kernel
