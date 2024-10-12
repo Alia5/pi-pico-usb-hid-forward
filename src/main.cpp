@@ -13,16 +13,6 @@
 
 #include "usb/device/hid.hpp"
 
-static void exampleTask(void* parameters) {
-    (void)parameters;
-
-    for (;;) {
-        // printf("Hello, world!\n");
-        // tud_cdc_write_str("CDC Hello, world!\n");
-        vTaskDelay(1000);
-    }
-}
-
 static void usbHostTask(void* parameters) {
     (void)parameters;
 
@@ -82,11 +72,6 @@ int main() {
     }
     uxCoreAffinityMask = (1 << 0);
     vTaskCoreAffinitySet(usbDeviceTaskHandle, uxCoreAffinityMask);
-
-    if (xTaskCreate(exampleTask, "Example Task", configMINIMAL_STACK_SIZE, nullptr,
-                    tskIDLE_PRIORITY + 1, nullptr) != pdPASS) {
-        printf("Task not created\n");
-    }
 
     /* Start the scheduler. */
     vTaskStartScheduler();
