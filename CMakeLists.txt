@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Initialise pico_sdk from installed location
@@ -38,6 +38,8 @@ add_executable(${target_name})
 set(PICO_CXX_ENABLE_EXCEPTIONS 1)
 set(PICO_CXX_ENABLE_RTTI 1)
 
+
+
 if(DEFINED ENV{PICO_DEBUG} OR CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_BUILD_TYPE Debug)
     set(PICO_DEOPTIMIZED_DEBUG 1)
@@ -46,8 +48,21 @@ endif()
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+set(PICO_PIO_USB_DIR "${CMAKE_CURRENT_LIST_DIR}/ext/Pico-PIO-USB")
+add_subdirectory(${PICO_PIO_USB_DIR} pico_pio_usb)
+
+add_compile_definitions(CFG_TUSB_CONFIG_FILE=\"src/config/tusb_config.h\")
+
+file(GLOB_RECURSE srcFiles CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_LIST_DIR}/src/*.c"
+    "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+)
+
 target_sources(${target_name} PRIVATE
     src/main.cpp
+    ${srcFiles}
+    ${PICO_TINYUSB_PATH}/src/portable/raspberrypi/pio_usb/dcd_pio_usb.c
+    ${PICO_TINYUSB_PATH}/src/portable/raspberrypi/pio_usb/hcd_pio_usb.c
 )
 
 pico_set_program_name(${target_name} "${target_name}")
@@ -70,11 +85,12 @@ set(FREERTOS_CONFIG_PATH ${CMAKE_CURRENT_LIST_DIR}/src/config)
 include(FreeRTOS_Kernel_import.cmake)
 
 # \
+target_compile_definitions(${target_name} PRIVATE PIO_USB_USE_TINYUSB)
 
 # Add the standard library to the build
-target_link_libraries(${target_name}
-    pico_async_context_freertos
-    FreeRTOS-Kernel-Heap4
+target_link_libraries(${target_name} PRIVATE
+    pico_async_context_freertos FreeRTOS-Kernel-Heap4
+    pico_pio_usb tinyusb_device tinyusb_host
     pico_stdlib
 )
 

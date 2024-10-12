@@ -3,9 +3,10 @@
         {
             "name": "Pico",
             "includePath": [
-                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/**",
                 "${userHome}/.pico-sdk/sdk/2.0.0/**",
-                "${workspaceFolder}/ext/FreeRTOS-Kernel/include"
+                "${workspaceFolder}/ext/FreeRTOS-Kernel/include",
+                "${workspaceFolder}/ext/Pico-PIO-USB/src"
             ],
             "forcedInclude": [
                 "${userHome}/.pico-sdk/sdk/2.0.0/src/common/pico_base_headers/include/pico.h",

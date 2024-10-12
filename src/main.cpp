@@ -7,28 +7,84 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 
+#include "pio_usb.h"
+#include "tusb.h"
+#include "usb/usb_descriptors.h"
+
+#include "usb/device/hid.hpp"
 
 static void exampleTask(void* parameters) {
     (void)parameters;
 
     for (;;) {
-        printf("Hello, world!\n");
+        // printf("Hello, world!\n");
+        // tud_cdc_write_str("CDC Hello, world!\n");
         vTaskDelay(1000);
     }
 }
 
-static void prvSetupHardware(void) { stdio_init_all(); }
+static void usbHostTask(void* parameters) {
+    (void)parameters;
 
+    vTaskDelay(500);
+
+    pio_usb_configuration_t pio_cfg = PIO_USB_DEFAULT_CONFIG;
+    pio_cfg.pin_dp = 2; // TODO
+    tuh_configure(1, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &pio_cfg);
+
+
+    tuh_init(1);
+
+    for (;;) {
+        tuh_task();
+        vTaskDelay(1);
+    }
+}
+
+static void usbDeviceTask(void* parameters) {
+    (void)parameters;
+
+    tud_init(0);
+
+
+    for (;;) {
+        tud_task(); // tinyusb device task
+        tud_cdc_write_flush();
+        hid_task();
+        vTaskDelay(1);
+    }
+}
+
+static void prvSetupHardware() { stdio_init_all(); }
 int main() {
     prvSetupHardware();
 
 
-    static TaskHandle_t exampleTaskHandle;
+    static TaskHandle_t usbHostTaskHandle;
+    static TaskHandle_t usbDeviceTaskHandle;
 
-    printf("Example FreeRTOS Project STATS\n");
+    printf("Pico USB-HID forwarder\n");
+    printf("Starting scheduler...\n");
 
-    if (xTaskCreate(exampleTask, "Example Task", configMINIMAL_STACK_SIZE, NULL,
-                    tskIDLE_PRIORITY + 1, &exampleTaskHandle) != pdPASS) {
+
+    if (xTaskCreate(usbHostTask, "USB Host Task", configMINIMAL_STACK_SIZE, nullptr,
+                    configMAX_PRIORITIES - 2, &usbHostTaskHandle) != pdPASS) {
+        printf("USB-Host Task not created\n");
+    }
+
+    UBaseType_t uxCoreAffinityMask;
+    uxCoreAffinityMask = (1 << 1);
+    vTaskCoreAffinitySet(usbHostTaskHandle, uxCoreAffinityMask);
+
+    if (xTaskCreate(usbDeviceTask, "USB Device Task", configMINIMAL_STACK_SIZE, nullptr,
+                    tskIDLE_PRIORITY + 3, &usbDeviceTaskHandle) != pdPASS) {
+        printf("USB-Device Task not created\n");
+    }
+    uxCoreAffinityMask = (1 << 0);
+    vTaskCoreAffinitySet(usbDeviceTaskHandle, uxCoreAffinityMask);
+
+    if (xTaskCreate(exampleTask, "Example Task", configMINIMAL_STACK_SIZE, nullptr,
+                    tskIDLE_PRIORITY + 1, nullptr) != pdPASS) {
         printf("Task not created\n");
     }
 
@@ -38,10 +94,10 @@ int main() {
     return 0;
 }
 
-void vApplicationMallocFailedHook(void) { configASSERT((volatile void*)NULL); }
+void vApplicationMallocFailedHook() { configASSERT((volatile void*)nullptr); }
 
 
-void vApplicationIdleHook(void) {
+void vApplicationIdleHook() {
     volatile size_t xFreeHeapSpace;
 
     xFreeHeapSpace = xPortGetFreeHeapSize();
