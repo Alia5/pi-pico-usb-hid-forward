@@ -53,8 +53,7 @@ target_sources(${target_name} PRIVATE
 pico_set_program_name(${target_name} "${target_name}")
 pico_set_program_version(${target_name} "0.1")
 
-# Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(${target_name} 0)
+pico_enable_stdio_uart(${target_name} 1)
 pico_enable_stdio_usb(${target_name} 0)
 
 target_link_options(${target_name} PRIVATE -Xlinker --print-memory-usage)
@@ -65,14 +64,25 @@ ELSE()
     target_compile_options(${target_name} PRIVATE -Wall -Wextra -O3)
 ENDIF()
 
+# Pull in FreeRTOS
+set(FREERTOS_KERNEL_PATH ${CMAKE_CURRENT_LIST_DIR}/ext/FreeRTOS-Kernel)
+set(FREERTOS_CONFIG_PATH ${CMAKE_CURRENT_LIST_DIR}/src/config)
+include(FreeRTOS_Kernel_import.cmake)
+
+# \
+
 # Add the standard library to the build
 target_link_libraries(${target_name}
-    pico_stdlib)
+    pico_async_context_freertos
+    FreeRTOS-Kernel-Heap4
+    pico_stdlib
+)
 
 # Add the standard include files to the build
 target_include_directories(${target_name} PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required
+    ${CMAKE_CURRENT_LIST_DIR}/src/config
 )
 
 pico_add_extra_outputs(${target_name})
